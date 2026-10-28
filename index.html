@@ -199,7 +199,7 @@
   </div>
 
   <script>
-    // GANTI URL DEPLOYMENT GOOGLE APPS SCRIPT ANDA DI SINI
+    // GANTI SESUAI WEB APP URL DARI GOOGLE APPS SCRIPT ANDA
     const API_URL = "https://script.google.com/macros/s/AKfycbxYbltfRc8rG5YktJ8yxoRjHQRbjPhKZCnL7QvqB187N63x5lDTpH9h5afGNVZ9wr8S/exec";
 
     let rawDataCache = { pemasukan: [], pengeluaran: [], totalMasuk: 0, totalKeluar: 0, saldo: 0 };
@@ -209,6 +209,16 @@
     document.getElementById('tanggal').valueAsDate = new Date();
 
     const formatRp = (val) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(val || 0);
+
+    // Format Tanggal untuk Tampilan Tabel (dd/mm)
+    function formatDateDisplay(dateVal) {
+      if (!dateVal) return "-";
+      const d = new Date(dateVal);
+      if (isNaN(d.getTime())) return String(dateVal);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      return `${day}/${month}`;
+    }
 
     async function fetchData() {
       try {
@@ -277,7 +287,7 @@
       }
       tbody.innerHTML = items.map(item => `
         <tr class="border-b border-gray-50 hover:bg-gray-50">
-          <td class="p-2 text-xs text-gray-500">${item.tanggal}</td>
+          <td class="p-2 text-xs text-gray-500 font-medium">${formatDateDisplay(item.tanggal)}</td>
           <td class="p-2 font-medium">${escapeHtml(item.uraian)}</td>
           <td class="p-2 text-right font-semibold ${colorClass}">${formatRp(item.nominal)}</td>
           <td class="p-2 text-center">
