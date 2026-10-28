@@ -199,7 +199,7 @@
   </div>
 
   <script>
-    // GANTI SESUAI URL DEPLOYMENT WEB APP APPS SCRIPT ANDA
+    // GANTI URL DEPLOYMENT GOOGLE APPS SCRIPT ANDA DI SINI
     const API_URL = "https://script.google.com/macros/s/AKfycbxYbltfRc8rG5YktJ8yxoRjHQRbjPhKZCnL7QvqB187N63x5lDTpH9h5afGNVZ9wr8S/exec";
 
     let rawDataCache = { pemasukan: [], pengeluaran: [], totalMasuk: 0, totalKeluar: 0, saldo: 0 };
@@ -208,7 +208,7 @@
 
     document.getElementById('tanggal').valueAsDate = new Date();
 
-    const formatRp = (val) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(val);
+    const formatRp = (val) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(val || 0);
 
     async function fetchData() {
       try {
@@ -228,14 +228,14 @@
       const startDate = startVal ? new Date(startVal) : null;
       const endDate = endVal ? new Date(endVal) : null;
 
-      const inFiltered = rawDataCache.pemasukan.filter(item => {
+      const inFiltered = (rawDataCache.pemasukan || []).filter(item => {
         const itemDate = new Date(item.tanggal);
         if (startDate && itemDate < startDate) return false;
         if (endDate && itemDate > endDate) return false;
         return true;
       });
 
-      const outFiltered = rawDataCache.pengeluaran.filter(item => {
+      const outFiltered = (rawDataCache.pengeluaran || []).filter(item => {
         const itemDate = new Date(item.tanggal);
         if (startDate && itemDate < startDate) return false;
         if (endDate && itemDate > endDate) return false;
@@ -278,7 +278,7 @@
       tbody.innerHTML = items.map(item => `
         <tr class="border-b border-gray-50 hover:bg-gray-50">
           <td class="p-2 text-xs text-gray-500">${item.tanggal}</td>
-          <td class="p-2 font-medium">${item.uraian}</td>
+          <td class="p-2 font-medium">${escapeHtml(item.uraian)}</td>
           <td class="p-2 text-right font-semibold ${colorClass}">${formatRp(item.nominal)}</td>
           <td class="p-2 text-center">
             <button onclick="openEditModal('${item.id}', '${item.type}', '${item.tanggal}', '${escapeHtml(item.uraian)}', ${item.nominal})" class="text-blue-600 hover:text-blue-800 text-xs font-medium mr-1">
@@ -293,20 +293,21 @@
     }
 
     function escapeHtml(str) {
-      return (str || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+      if (!str) return '';
+      return String(str).replace(/'/g, "\\'").replace(/"/g, "&quot;");
     }
 
     function renderChart(inData, outData) {
       const monthlyData = {};
 
-      inData.forEach(item => {
+      (inData || []).forEach(item => {
         if (!item.tanggal) return;
         const month = item.tanggal.substring(0, 7);
         if (!monthlyData[month]) monthlyData[month] = { masuk: 0, keluar: 0 };
         monthlyData[month].masuk += Number(item.nominal) || 0;
       });
 
-      outData.forEach(item => {
+      (outData || []).forEach(item => {
         if (!item.tanggal) return;
         const month = item.tanggal.substring(0, 7);
         if (!monthlyData[month]) monthlyData[month] = { masuk: 0, keluar: 0 };
@@ -404,6 +405,7 @@
       try {
         await fetch(API_URL, {
           method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ type: type, tanggal: tanggal, items: items })
         });
         
@@ -418,7 +420,7 @@
         await fetchData();
       } catch (err) {
         alert("Gagal menyimpan data: " + err.message);
-      } font-medium {
+      } finally {
         btn.disabled = false;
         btn.textContent = "Simpan Semua Transaksi";
       }
@@ -429,6 +431,7 @@
       try {
         await fetch(API_URL, {
           method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ action: "delete", id: id, type: type })
         });
         await fetchData();
@@ -468,6 +471,7 @@
       try {
         await fetch(API_URL, {
           method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify(payload)
         });
         closeEditModal();
